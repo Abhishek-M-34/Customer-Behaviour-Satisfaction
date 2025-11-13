@@ -50,11 +50,8 @@ def resultOutput(result):
         return 'No'
 
 # Prediction function - CORRECTED to match Flask version
-def customer_satisfaction_prediction(gender_input, age_input, salary_input, debug=False):
+def customer_satisfaction_prediction(gender_input, age_input, salary_input):
     try:
-        if debug:
-            st.write("DEBUG: Starting prediction function")
-
         gender_value = genderInput(gender_input)
 
         if gender_value is None:
@@ -66,16 +63,11 @@ def customer_satisfaction_prediction(gender_input, age_input, salary_input, debu
         # CORRECTED: Use same feature order as Flask version [Gender, Age, Salary]
         input_data = np.array([[gender_value, age_value, salary_value]])
 
-        if debug:
-            st.write(f"DEBUG: Raw input data - Gender: {gender_value}, Age: {age_value}, Salary: {salary_value}")
 
         if scaler is None or not hasattr(scaler, 'transform'):
             return "Error: Scaler not available or invalid. Please check scaler.pkl file.", None
 
         scaled_data = scaler.transform(input_data)
-
-        if debug:
-            st.write(f"DEBUG: Scaled data: {scaled_data}")
 
         prediction = model.predict(scaled_data)
         probabilities = model.predict_proba(scaled_data)
@@ -85,11 +77,6 @@ def customer_satisfaction_prediction(gender_input, age_input, salary_input, debu
         # Confidence for the predicted class (not just class 1)
         confidence = probabilities[0][predicted_purchase]
 
-        if debug:
-            st.write(f"DEBUG: Raw Prediction Output: {prediction}")
-            st.write(f"DEBUG: Prediction Probabilities: {probabilities}")
-            st.write(f"DEBUG: Predicted class: {predicted_purchase}")
-            st.write(f"DEBUG: Confidence for predicted class: {confidence:.4f}")
 
         return predicted_purchase, confidence
 
@@ -99,9 +86,6 @@ def customer_satisfaction_prediction(gender_input, age_input, salary_input, debu
 # Main app
 def main():
     st.title('Customer Behaviour Prediction Web App')
-
-    # Add debug toggle
-    debug_mode = st.checkbox('Enable Debug Mode', value=False)
 
     # Use better input methods
     gender_input = st.selectbox('Select Gender', ['Male', 'Female'])
@@ -113,7 +97,7 @@ def main():
             st.error("Model not loaded properly. Please check model files.")
             return
 
-        result, confidence = customer_satisfaction_prediction(gender_input, age_input, salary_input, debug=debug_mode)
+        result, confidence = customer_satisfaction_prediction(gender_input, age_input, salary_input)
 
         # If result is error message (string), show error
         if isinstance(result, str) and (result.startswith("Error") or result.startswith("Prediction Error")):
